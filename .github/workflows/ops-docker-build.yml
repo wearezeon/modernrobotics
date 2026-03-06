@@ -1,0 +1,43 @@
+name: Ops — Docker Build
+
+on:
+  push:
+    paths:
+      - "ops/**"
+      - ".github/workflows/ops-docker-build.yml"
+  pull_request:
+    paths:
+      - "ops/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ops
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript compile check
+        run: npm run build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ops
+          push: false
+          tags: beverly-hills-cop-ops:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
